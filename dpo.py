@@ -3,9 +3,9 @@ import json
 from groq import Groq
 from google.colab import userdata
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from peft import PeftModel
-from trl import DPOTrainer, DPOConfig
+from trl import DPOTrainer
 from datasets import load_dataset
 
 # Passo 1: Construção do Dataset de Preferências (HHH Dataset)
@@ -67,3 +67,31 @@ else:
         for item in dataset:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
+# Passo 2: Preparação do Pipeline DPO
+MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+# Adaptador treinado no Lab 07
+ADAPTADOR_PATH = "./lora_adaptador"
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
+tokenizer.pad_token = tokenizer.eos_token
+
+# Modelo Ator: TinyLlama + adaptador LoRA do Lab 07
+base_model = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    torch_dtype=torch.float16,
+    device_map="auto",
+    trust_remote_code=True,
+)
+model_ator = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    torch_dtype=torch.float16,
+    trust_remote_code=True,
+).to("cuda")
+model_ator.config.use_cache = False
+
+model_ref = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    torch_dtype=torch.float16,
+    trust_remote_code=True,
+).to("cuda")
+model_ref.config.use_cache = False
