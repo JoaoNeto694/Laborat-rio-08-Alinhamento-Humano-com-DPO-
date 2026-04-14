@@ -95,3 +95,6 @@ model_ref = AutoModelForCausalLM.from_pretrained(
     trust_remote_code=True,
 ).to("cuda")
 model_ref.config.use_cache = False
+
+# Passo 3: Hiperparâmetro Beta e Dataset
+dataset_dpo = load_dataset("json", data_files="dpo_dataset.jsonl", split="train")
